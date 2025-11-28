@@ -1,5 +1,7 @@
 # This is the file in which all the ROS learnings are going to be entered. 
 
+- This entire notes are creating on basis of the youtube playlist --> [https://www.youtube.com/playlist?list=PLLSegLrePWgJudpPUof4-nVFHGkB62Izy]
+
 ## ROS2 HUMBLE HAWKSBILL
 
 #### We Are going to use ROS2 in ubuntu. The installation must be done by following all the steps in the official documentation on the official website.
@@ -134,8 +136,6 @@ if __name__ = "__main__":
 
 ### ROS2 Topics : A Topic is named bus over which nodes exchange messages in a publish-subscribe pattern. Its an asynchronous contact [publisher doesnt wait for the reciever to respond] in which there is many to many relationship of publishers and listners over a single Topic. This is used for streaming data like sensor readings, camera Images etc.
 
-### ROS2 Service : A Service is a synchronous request response communication between nodes. One node acts as a service server and another node acts as a service client. The client waits for the server to respond. This is a sunchronous one to one relationship between the server and the client. Used for descrete actions like RESET SIMULATION or ADD TWO NUMBERS.
-
 -Lets look at some topic commands.
 1. Terminal1 : `ros2 topic list` --> Gives me a list of topics that are available.
 2. Terminal1 : `ros2 topic info /topic_name` --> This command give me the description of the topic_name. The topic_name must be the actual name of the topic. We will know the type of message at this step.
@@ -204,10 +204,201 @@ def main (args = None ):
 
 ```
 
-### ROS2 Listener : A listner is a part of the node that receives messages from a specific topic. It waits and listens for any data that is being published on that topic, processes the input and acts whenever new information arrives.
+### ROS2 Listener : A listner which is also called as a SUBSCRIBER is a part of the node that receives messages from a specific topic. It waits and listens for any data that is being published on that topic, processes the input and acts whenever new information arrives.
 
-- Now we will create a listner :
-1. 
+- Now we will create a listener / subscriber :
+- For this purpose as well we will need the topic name that we will subscribe to and the type of message of that topic For that we will do the following :
+1. Terminal1 : `ros2 run turtlesim turtlesim_node`
+2. Terminal2 : `ros2 topic list`
+- This will give us the list of topics that are available on current scenerio. Now we wil identify what topic we will listen to using `rqt_graph`. In our case the topic is `/turtlesim/pose`
+3. Terminal2 : `ros2 topic info /turtlesim/pose`
+- This will give us the type of message that we will recieve from the topic. And we got the name of the topic as well. 
+4. Terminal2 : `ros2 interface show /turtlesim/msg/pose`
+- This will show us the type of data that can be entered in the message.
+- We will create the python file and we will convert it into a executable file and then we will start writing the code in following steps :
+    1. Shebang line and the imports
+        - Add the imports in the .xml file as depends.
+    2. Define the main function.
+    3. Create the Class PoseSubscriberNode(Node)
+    4. Define the supporting functions inside the class. 
+    5. After Completion of code, add the file in the setup.py as a callable executable.
+    5. Build the program using colcon build with simlink install
+    6. Source the built program using bashrc
+    7. Run The turtlesim node.
+    8. Run our built program just like a direct program.
+- Now the listener must be receiving the data continously that is being sent from the turtlesim/pose which will send position information to the listener.
+
+- pose_subsriber.py Entire Code :
+```python
+#!/usr/bin/env python3
+import rclpy
+from rclpy.node import Node
+from turtlesim.msg import Pose
+
+class PoseSubscriberNode(Node):
+    
+    def __init__(self):
+        super().__init__("pose_subscriber")
+        self.pose_subscriber_ = self.create_subscription(Pose, "/turtlesim/pose", self.pose_callback, 10)
+
+    def pose_callback(self, msg : Pose):
+        self.get_logger().info("(" + str(msg.x) + ", " + str(msg.y) + ")")
+
+def main (args=None):
+    rclpy.init(args=args)
+    rclpy.shutdown()
+```
+
+- Then in Terminal we will use the command : `ros2 run my_first_package pose_subscriber`
+- The node must start receiving the messages from the topic using the /turtlesim/pose/
 
 
- 
+### Now lets create a closed loop system with a Publisher and a Subscriber :
+- Using the System the turtle will continously move on the turtlesim window but as soon as it reaches the edge the trtle turns.
+1. Terminal1[ros2_ws/src/my_first_package/my-first_package] : `touch turtle_controller.py`
+2. Terminal1[ros2_ws/src/my_first_package/my-first_package] : `chmod +x turtle_controller.py`
+3. Terminal[ros2_ws/src] : `code .`
+- Open Turtle_controller and start editing the code
+    1. Shebang Line and the imports.
+    2. Define the main function.
+    3. Create a Class for the Node.
+    4. Add the executable name in the setup.py.
+    5. Colcon build with symlink
+    6. Source .bashrc
+    7. Run our program.
+- While writing the code we must break the complex problem into smaller steps and work in proceeding steps by checking everthing is working fine on intervals.
+
+
+ - turtle_controller.py Entire code :
+ ```python
+#!/usr/bin/env python3
+import rclpy
+from rclpy.node import Node
+from turtlesim.msg import Pose
+from geometry_msgs.msg import Twist
+
+class TurtleControllerNode(Node):
+
+    def __init__(self):
+        super().__init__("turtle_controller")
+        self.cmd_vel_publisher_ = self.create_publisher(Twist, "/turtle1/cmd_vel", 10)
+        self.pose_subscriber_ = self.create_subscription(Pose, "/turtle1/pose", self.pose_callback, 10)
+        self.get_logger().info('Turtle Controller has started.')
+
+    def pose_callback(self, pose: Pose):
+        cmd = Twist()
+        if pose.x > 9.0 or pose.x < 2.0 or pose.y > 9.0 or pose.y < 2.0:
+            cmd.linear.c = 1.0
+            cmd.angular.z = 0.9
+        else:
+            cmd.linear.x = 0.5
+            cmd.angular.z = 0.0
+        self.cmd_vel_publisher_.publish(cmd)
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = TurlteControllerNode()
+    rclpy.spin(node)
+    rclpy.shutdown()
+ ```
+
+### ROS2 Services : A Service is a synchronous request response communication between nodes. One node acts as a service server and another node acts as a service client. The client waits for the server to respond. This is a sunchronous one to one relationship between the server and the client. Used for descrete actions like RESET SIMULATION or ADD TWO NUMBERS.
+
+- We will look at few terminal commands for ROS services : 
+1. Terminal1 : `ros2 run demo_nodes_cpp add_two_ints_server` --> Mind that the outputs of following commands are respect to this.
+2. Terminal2 : `ros2 service list` --> This will return the list of services that are available. From this list we will select what we want. In our case it will be /add-two-ints
+3. Terminal2 : `ros2 node list` --> Gives the list of nodes.
+4. Terminal2 : `ros2 service type /add-two-ints` --> This gives us the service details along with its package name and also the functionality in it.
+5. Terminal2 : `ros2 interface show 'output from the above command'` --> This will give us further details of the service functionality and what is inside the service.
+6. Terminal3 : `ros2 service call /add_two_ints example_interfaces/srv/AddTwoInts "{'a': 2, 'b': '5'}"` --> We call a service in this manner.
+
+- For a service there can be multiple clients but only one server. Mostly one-to-many relationship.
+- A service we usually have mostly two kinds of requests :
+    1. Computational requests
+    2. Change of settings requests
+
+- The change of settings requests can be checked as:
+1. Terminal1 : `ros2 run turtlesim turtlesim_node`
+2. Terminal2 : `ros2 service list` --> This will give us all the services with respect to command in terminal1. In our case we will use /turtle1/set_pen
+3. Terminal2 : `ros2 service type /turtle1/set_pen` --> turtlesim/srv/SetPen
+4. Terminal2 : `ros2 interface show turtlesim/srv/SetPen` --> This will give us the type of inputs we can send.
+5. Terminal2 : `ros2 service call /turtle1/set_pen turtlesim/srv/SetPen "{'r': 255 , 'g' : 0, 'b' : 0, 'width' : 3, 'off' : 0}"` --> This is the calling of the service for our current spwned turtle.
+
+### When to use TOPICS and when to use SERVICES ??
+- Topics are used to send some data only and no interaction is needed and Services are used when we want some interaction between nodes like computation or changing settings.
+
+### Lets Write a Service Client with Python --> 
+- We will add the service in our turtle_controller that we created previously. 
+
+- turtle_controller.py Entire code after calling the service:
+```python
+#!/usr/bin/env python3
+import rclpy
+from rclpy.node import Node
+from turtlesim.msg import Pose
+from geometry_msgs.msg import Twist
+from turtlesim.srv import SetPen
+from functools import partial
+
+class TurtleControllerNode(Node):
+
+    def __init__(self):
+        super().__init__("turtle_controller")
+        self.previous_x_ = 0
+        self.cmd_vel_publisher_ = self.create_publisher(Twist, "/turtle1/cmd_vel", 10)
+        self.pose_subscriber_ = self.create_subscription(Pose, "/turtle1/pose", self.pose_callback, 10)
+        self.get_logger().info('Turtle Controller has started.')
+
+    def pose_callback(self, pose: Pose):
+        cmd = Twist()
+        if pose.x > 9.0 or pose.x < 2.0 or pose.y > 9.0 or pose.y < 2.0:
+            cmd.linear.c = 1.0
+            cmd.angular.z = 0.9
+        else:
+            cmd.linear.x = 0.5
+            cmd.angular.z = 0.0
+        self.cmd_vel_publisher_.publish(cmd)
+
+        # We will call the service here
+        if pose.x > 5.5 and self.previous_x_ <= 5.5:
+            self.previous_x_ = pose.x
+            self.get_logger().info("Set Color to red!")
+            self.call_set_pen_service(255, 0, 0, 3, 0)
+        elif pose.x <= 5.5 and self.previous_x_ > 5.5:
+            self.previous_x_ = pose.x
+            self.get_logger().info("Set Color to green!")
+            self.call_set_pen_service(0, 255, 0, 3, 0)
+
+
+    # We will define a service below
+    def call_set_pen_service(self, r, g, b, width, off):
+        client = self.create_client(SetPen, "/turtle1/set_pen") 
+        # The service type and the service name are obtained using the above described terminals.
+        while not client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for service...")
+        
+        request = SetPen.Request()
+        request.r = r
+        request.g = g
+        request.b = b
+        request.width = width
+        request.off = off
+
+        future = client.call_async(request)
+        future.add_done_callback(partial(self.callback_set_pen))
+    
+    def callback_set_pen(self, future): 
+        try:
+            response = future.result()
+        except Exception as e:
+            self.get_logger().error("Service call failed: %r" % (e,))
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = TurlteControllerNode()
+    rclpy.spin(node)
+    rclpy.shutdown()
+```
+
+- A service can be called at any desired rate but we must always call service at the most optimum rate.
+
