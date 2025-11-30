@@ -4,7 +4,7 @@
 
 ## ROS2 HUMBLE HAWKSBILL
 
-#### We Are going to use ROS2 in ubuntu. The installation must be done by following all the steps in the official documentation on the official website.
+### We Are going to use ROS2 in ubuntu. The installation must be done by following all the steps in the official documentation on the official website.
 
 - If we want to run ROS2 we need to source the setup.bash file first (Initial in every terminal.)
 - But that is not efficien, so we will do it in better way. We will add the sourcing code line in the ./bachrc file.
@@ -13,7 +13,7 @@
     `source /opt/ros/humble/setup.bash`
 Now the source code will automatically run at the terminal startup.
 
-## The layout of runnning ros2 will be 4 terminals.
+### The layout of runnning ros2 will be 4 terminals.
 
 - To test the ROS2 we will follow the steps:
     1. Terminal1: `ros2 run demo_nodes_cpp talker`
@@ -31,7 +31,7 @@ Now the source code will automatically run at the terminal startup.
 
 - Upon using rqt_graph we understand that each process runs in terms of ros nodes.
 
-## Node : A node is any program that has access of ros2 and it is used to communicate with other node programs. In above example the program running in terminal 1 is the listening node which is also called as SUBSCRIBER node and the program running in terminal 2 is the sending node which is also called as PUBLISHER node.
+### Ros2 Node : A node is any program that has access of ros2 and it is used to communicate with other node programs. In above example the program running in terminal 1 is the listening node which is also called as SUBSCRIBER node and the program running in terminal 2 is the sending node which is also called as PUBLISHER node.
 
 ### Creating an ROS2 Workspace: We need to install a built tool:
 
@@ -402,3 +402,282 @@ def main(args=None):
 
 - A service can be called at any desired rate but we must always call service at the most optimum rate.
 
+- Now the further nodes will be taken from the youtube video - [https://www.youtube.com/watch?v=HJAE5Pk8Nyw]
+
+- The concepts beyond this point are successors of the topics above :
+
+### ROS2 Parameters : ROS2 parameters are named values stores inside a node that allows you to configure and change the behavior of that node while the code is running live in realtime. We wont be required to change the code. Ex : Changing the speed of the robot while the robot code is running.
+
+- Lets look at some param commands now :
+1. Terminal1 : `ros2 run turtlesim turtlesim_node`
+2. Terminal2 : `ros2 run turtlesim turtle_teleop_key`
+3. Terminal3 : `ros2 param list`
+- In order to get the list of params available the nodes must be live and running.
+4. Terminal3 : `ros2 param dump <node_name>` --> This will return us the list of params available for that node.
+
+
+### ROS2 Actions : These are a communication mechanism used when a Task takes long time to complete. They allow a node to send a goal, recieve continous feedback and get a final result once the task finishes.
+
+- Task : Move 5 steps [Robot]
+1. Send the goal.
+2. Recieve feedback --> ex : 2 Steps Left
+3. Get the Result.
+
+- There are certain commands for this sections as well, which we will look at later
+
+### ROS2 Colcon build Tool : It a command line tool that we can use to create packages.
+
+- Procedure for creating a node and using colcon build tool.
+1. Create a empty workspace along with a src folder inside it.
+2. When terminal is in root workspace folder use command `colcon build --symlink-install`
+3. Then go inside src folder and type command `ros2 pkg create my_first_package --build-type ament_python --dependencies rclpy` --> This will create the package.
+4. Then go inside the my_first_package folder and there will be __init__.py file. There create another python file which will be our node file.
+5. In order to use it we must first source the file. 
+6. Go to the src folder and then go into install folder and get the path of the setup.bash file.
+7. Then when the terminal is in the root workspace folder we must souce the setup.bash file with full path. Then we can use it.
+8. Any changes made in the file must be updated using the colcon build command again. 
+
+
+### ROS2 Launch files : Ros2 Launch files allow us to start multiple nodes, set parameters, remap topics and configure your entire system using a single command. They help automate complex setups so we dont need to run each node manually.
+
+- Use Case : Starting a robot with sensors and navigation --> 
+- Imagine you have a robot system with :
+1. LiDAR node
+2. A robot control node
+3. A navigation node
+4. RViz Visualization
+- Running manually = 4 Terminals
+
+- Using a launch file :
+Terminal1 : `ros2 launch package_name launch_file.`
+
+- A sample launch file :
+```python
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    return LaunchDescription([
+        Node(
+            package='my_robot',
+            executable='lidar_node',
+            name='lidar'
+        ),
+        Node(
+            package='my_robot',
+            executable='controller_node',
+            name='controller'
+        )
+    ])
+```
+
+- Typical convention of a launch file is --> "something.launch.py"
+
+xxxxxxxxxxxxxxx **HERE ROS2 Concepts CONCLUDE** xxxxxxxxxxxxxxxxx
+
+## ROBOT Description 
+
+### URDF : Unified Robotics Description Format
+- It is a xml file saved in .urdf extension used to describe the visual, physics and connections of a robot with joints and links. Below is the general structure of an URDF file.
+
+- A sample .urdf URDF file :
+```python
+<?xml version="1.0"?>
+<robot name="my_robot">
+
+  <!-- Base link -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.5 0.5 0.1"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 1 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Second link -->
+  <link name="link1">
+    <visual>
+      <geometry>
+        <cylinder length="0.6" radius="0.05"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Joint connecting base_link and link1 -->
+  <joint name="joint1" type="continuous">
+    <parent link="base_link"/>
+    <child  link="link1"/>
+
+    <!-- Position of link1 relative to base_link -->
+    <origin xyz="0 0 0.2" rpy="0 0 0"/>
+
+    <!-- Joint axis -->
+    <axis xyz="0 0 1"/>
+  </joint>
+
+</robot>
+```
+
+### URDF link : A link is used to describe a segment of a robot, where you can define the visual, collision and the inertial propeties of the robot. The geometry and origin properties are used in visual and collisions properties to describe the shape and location of the link.
+
+
+- A sample LINK code :
+```python
+<link name="link1">
+  <visual>
+    <geometry>
+      <box size="0.3 0.1 0.1"/>
+    </geometry>
+    <material name="green">
+      <color rgba="0 1 0 1"/>
+    </material>
+  </visual>
+
+  <collision>
+    <geometry>
+      <box size="0.3 0.1 0.1"/>
+    </geometry>
+  </collision>
+
+  <inertial>
+    <mass value="1.0"/> # in kgs
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <inertia
+      ixx="0.01" ixy="0"   ixz="0"
+      iyy="0.01" iyz="0"
+      izz="0.01"/>
+  </inertial>
+</link>
+```
+
+- Now lets look into the inner parts of the link element :
+1. Visual : Visual is used to describe the geometry of the link. Usually this can be an accurate representation of the robot or just a simplified version depending on the goal. For accurate models, one can obtain the model from a 3D modeling softwares like SolidWorks and export the .stl files for the geometry.
+- Geometry : Types of geometry --> 
+    1. box 
+    2. sphere
+    3. cylinder
+    4. mesh
+- Different types are defined differently.
+
+- Origin : This is used to define the rotation using roll (x), pitch (y), yaw (z)
+ and the translation in meters using x, y, z relative to the links coordinate frame. The order of rotation for rpy is ZYX so first rotate along X axis, the Y axis and then Z axis. The rotation operation is applied first and then the translation.
+- Facts :
+1. For VISUAL and collision --> origin describes how the geometry is transformed relative to the link's frame
+2. For INERTIAL --> origin describes the location of the center of mass relative to the links frame. 
+
+- Axis colors 
+1. X --> red
+2. Y --> green
+3. Z --> blue
+
+- Material : Material is used to define the colors and the transparency of the color by using rgba, normalized between 0 and 1
+- Some examples :
+1. red --> 1001
+2. green --> 0101
+3. blue --> 0011
+
+2. Collision : The collision property can be used to describe a bounding shape around the link for collision detections. Usually, people use a simplified shape for this for faster calculation when detecting for collisions between other collision bounding shapes. This also has a geometry element and an origin element.
+
+3. Inertial : This is used to describe the inertia kg-m^3 about the link's center of mass and the mass (kg) of the link.
+```python
+<inertial>
+  <origin xyz="0 0 0" rpy="0 0 0"/>
+  <mass value="1.0"/>
+  <inertia 
+    ixx="0.01" ixy="0.0" ixz="0.0"
+    iyy="0.01" iyz="0.0"
+    izz="0.02"/>
+</inertia>
+```
+
+### URDF joint : Joints are used to describe the connections between the two links, a PARENT Link and a CHILD link.
+
+- General structure of a joint link : 
+```python 
+<joint name="joint_name" type="joint_type">
+  
+  <!-- Position and orientation of the child link 
+       relative to the parent link -->
+  <origin xyz="x y z" rpy="roll pitch yaw"/>
+
+  <!-- Parent link -->
+  <parent link="parent_link_name"/>
+
+  <!-- Child link -->
+  <child link="child_link_name"/>
+
+  <!-- Axis of rotation or translation (for revolute, continuous, prismatic) -->
+  <axis xyz="x y z"/>
+
+  <!-- Joint motion limits (only for revolute and prismatic) -->
+  <limit lower="value" upper="value" effort="value" velocity="value"/>
+
+</joint>
+```
+
+- Types of joints :
+1. Fixed : no motion between links
+2. continuous : rotation about axis, not limit
+3. revolute : rotation about axis, with limits (in radius)
+4. Prismatic : translation about axis
+5. Floating : 6 DOF (3 translation, 3 rotation)
+6. Planar : motion on plane (2 Translation, 1 rotation)
+
+- Joint elements :
+1. Parent and Child Link --> The parent link is the link before the joint and the child link is the link after the joint 
+2. Origin and axis --> The origin described the location of the child frame relative to the parent frame. The axis describes the axis of rotation for the joint.
+3. Dynamics --> THe dynamics include damping expressed in [N s/m] and friction (static friction) expressed in [ N ]
+4. Limit --> Limits are for REVOLUTE and PRISMATIC joints only. The lower and upper field are in radians or meters respectively, the effort is the max effort in [Nm] and velocity is max velocity [rad/s].
+
+- A sample joint code :
+```python
+<joint name="joint1" type="revolute">
+  <origin xyz="0 0 0.2" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="arm_link"/>
+  <axis xyz="0 0 1"/>
+  <limit lower="-1.57" upper="1.57" effort="10" velocity="2"/>
+</joint>
+```
+
+### XACRO Files : These are the files that allow us to create functions that we can call inside our URDF file. SO that the URDF file becomes nice and clean
+
+- Concepts :
+1. XACRO command : It is used to convert a .xacro file to a .urdf file.
+Terminal1 : `xacro model.xacro > model.urdf`
+2. Robot State Publisher : We use it to read the .urdf file in a launch file and use it as a robot description parameter. Also, run the xacro command to convert the .xacro to a .urdf file.
+- Sample code for robot state publisher
+```python
+path_to_urdf = ...
+robot_state_publisher_node = launch_ros.actions.Node(
+    package='robot_state_publisher',
+    executable='robot_state_publisher',
+    parameters=[{
+        'robot_description' : ParameterValue(Command(['xacro', str(path_to_urdf)]), value_type = str)
+    }]
+)
+```
+
+3. URDF Launch : We can use this package to load a .xacro or .urdf file
+```python
+def generate_launch_description():
+    ld = LaunchDescription()
+
+    ld.add_action(IncludeLaunchDescription(
+        PathJoinSUbstitution([FindPackageShare('urdf_launch'), 'launch', 'display.launch.py']),
+        launch_arguments={
+            'urdf_package' : 'turtlebot3_description',
+            'urdf_package_path' : PathJoinSubstitution(['urdf', 'model_name.urdf'])
+        }.items()
+    ))
+
+    return ld
+```
+
+4. Xacro Property : [ 1:07 ]
