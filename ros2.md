@@ -680,4 +680,62 @@ def generate_launch_description():
     return ld
 ```
 
-4. Xacro Property : [ 1:07 ]
+4. Xacro Property : 
+- Xacro properties are useful when the same property is used at multiple points and we can change all of them at once at one location using xacro properties.
+- Property Decleration :
+```xml
+    <xacro: property name="property_name" value="..." />
+```
+- Property Usage :
+```xml
+    <... variable="${property_name}" ...>
+```
+
+5. Xacro Macro :
+- These are used to replace several lines of xml code with the option of having input parameters. This is useful when several lines of code are repeated.
+
+- Xacro Macro decleration
+```xml
+<xacro:macro name="macro_name" param="param-1 param-2 ... param-n">
+
+
+    ...
+
+</xacro:macro>
+```
+- Xacro Macro Usage :
+```xml
+<xacro:macro_name param-1="value"/>
+```
+
+6. URDF using Xacro in Same file :
+- 
+
+
+
+## WE will come back here later when necessary --> Proceeding to next topic
+
+
+
+
+## RVIZ - Visualization
+
+- Rviz is a visualization tool in ros2 which will help us visualize the movement of our robot. It has different other features that will help us in camera integration, frame monitoring etc.
+
+### RVIZ Concepts :
+- Create a package inside /ros2_ws/src with the command :
+`ros2 pkg create package_name --build-type ament_python --license Apache-2.0 --dependencies rclpy`
+
+1. Rviz Configuration :
+- The .../urdf/r2d2.rviz file can be used to configure your rviz settings so you don't have to re-add the plugin and update settings each time. Otherwise, if you wanted the ROBOTMODEL you need to do Add > rviz_default_plugins > RobotModel
+- Global options --> Fixed frame: odom
+- Robot Model --> Description Topic: /robot_description
+- TF plugin setup to be attached so that we can see the frames.
+
+- This file is basically the urdf file where we described out robot.
+
+### RVIZ Concepts remain incomplete. WE will come back here again.
+
+## Gazemo and Ros Simulation :
+1. Install gazebo and ros2 packages.
+2. Create a package using ros2 pkg create command.
